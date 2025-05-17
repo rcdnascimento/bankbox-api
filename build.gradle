@@ -1,0 +1,36 @@
+plugins {
+	id 'org.springframework.boot' version "$springVersion"
+	id 'io.spring.dependency-management' version "$springDependencyManagementVersion"
+	id 'java'
+}
+
+group = 'com.bankbox'
+version = ''
+sourceCompatibility = '11'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation "org.mapstruct:mapstruct:$mapstructVersion"
+
+	compileOnly 'org.projectlombok:lombok'
+
+	annotationProcessor 'org.projectlombok:lombok'
+
+	runtimeOnly 'mysql:mysql-connector-java'
+
+	annotationProcessor "org.mapstruct:mapstruct-processor:$mapstructVersion"
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

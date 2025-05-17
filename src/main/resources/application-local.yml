@@ -1,0 +1,15 @@
+server:
+    port: 8080
+spring:
+    main:
+        allow-bean-definition-overriding: true
+    datasource:
+        url: jdbc:mysql://localhost:3307/bankbox?autoReconnect=true&useSSL=false
+        username: bankbox
+        password: bankbox
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        hibernate:
+            ddl-auto: update
+            dialect: org.hibernate.dialect.MySQL5Dialect
+        database-platform: org.hibernate.dialect.MySQL5Dialect

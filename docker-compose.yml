@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=bankbox
+      - MYSQL_USER=bankbox
+      - MYSQL_PASSWORD=bankbox
+    ports:
+      - 3307:3306
