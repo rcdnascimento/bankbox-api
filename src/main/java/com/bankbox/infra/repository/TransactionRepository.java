@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-	@Query(value = "SELECT DISTINCT t FROM Transaction t JOIN BankAccount b on b.id = t.source.id or b.id = t.beneficiary.id WHERE b.owner.id = :id")
+	@Query(value = "SELECT * FROM `transaction` WHERE beneficiary_id = 9 OR source_id = 9", nativeQuery = true)
 	List<Transaction> findBySourceOrBeneficiary(Long id);
 }

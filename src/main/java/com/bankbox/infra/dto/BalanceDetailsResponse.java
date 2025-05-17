@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
 public class BalanceDetailsResponse {
-	@JsonProperty("user_id")
-	public Long userId;
+	@JsonProperty("customer_id")
+	public Long customerId;
 	@JsonProperty("total_balance")
 	public BigDecimal totalBalance;
 	@JsonProperty("checking_balance")

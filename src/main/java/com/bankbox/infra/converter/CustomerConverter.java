@@ -22,6 +22,7 @@ public interface CustomerConverter {
 
 	Customer toCustomer(CustomerRegistrationRequest customerRegistrationRequest);
 
+	@Mapping(source = "id", target = "customerId")
 	@Mapping(expression = "java(customer.getBalance())", target = "totalBalance")
 	@Mapping(expression = "java(customer.getBalanceFrom(BankAccountType.CHECKING))", target = "checkingBalance")
 	@Mapping(expression = "java(customer.getBalanceFrom(BankAccountType.SAVINGS))", target = "savingsBalance")
