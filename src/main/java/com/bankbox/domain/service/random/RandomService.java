@@ -1,16 +1,12 @@
 package com.bankbox.domain.service.random;
 
-import com.bankbox.domain.entity.Customer;
-import com.bankbox.domain.entity.RandomCode;
-import com.bankbox.domain.entity.RandomCodeType;
+import com.bankbox.domain.entity.*;
 import com.bankbox.domain.service.customer.impl.CustomerService;
+import com.bankbox.infra.dto.RandomConfigurationRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 @Service
 public class RandomService {
@@ -28,17 +24,35 @@ public class RandomService {
     this.surnames.addAll(extractSurnamesFromFile(SURNAMES_FILE_PATH));
   }
 
-  public void generateRandomCustomers() {
+  public RandomSummary generateRandomCustomers(RandomConfiguration configuration) {
+    Integer generatedCustomers = 0;
     for (String name : firstNames) {
-      generateRandomCustomerWithFirstName(name);
+      if (generatedCustomers >= configuration.getMaximum()) {
+        break;
+      }
+
+      Integer generatedWithSameFirstName = generateRandomCustomerWithFirstName(configuration, generatedCustomers, name);
+      generatedCustomers += generatedWithSameFirstName;
     }
+
+    return new RandomSummary(generatedCustomers);
   }
 
-  public void generateRandomCustomerWithFirstName(String firstName) {
+  public Integer generateRandomCustomerWithFirstName(
+    RandomConfiguration configuration,
+    Integer currentGeneratedCustomers,
+    String firstName
+  ) {
     Random random = new Random();
-    int times = random.nextInt(10000) + 1;
+    int times = random.nextInt(configuration.getMaximumPerFirstName()-1) + 1;
+
+    Integer generatedCustomers = 0;
 
     for (int i = 0; i < times; i++) {
+      if (currentGeneratedCustomers+generatedCustomers >= configuration.getMaximum()) {
+        break;
+      }
+
       String firstSurname = surnames.get(random.nextInt(surnames.size()));
       String secondSurname = surnames.get(random.nextInt(surnames.size()));
 
@@ -50,7 +64,10 @@ public class RandomService {
         build();
 
       customerService.createCustomer(customer);
+      generatedCustomers++;
     }
+
+    return generatedCustomers;
   }
 
   public List<String> extractNamesFromFile(String filePath) {
