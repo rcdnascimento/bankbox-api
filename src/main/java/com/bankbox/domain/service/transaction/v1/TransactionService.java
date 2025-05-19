@@ -7,6 +7,7 @@ import com.bankbox.domain.service.customer.RetrieveCustomer;
 import com.bankbox.domain.service.transaction.ExecuteTransaction;
 import com.bankbox.domain.service.transaction.RetrieveTransaction;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class TransactionService implements ExecuteTransaction, RetrieveTransacti
 	}
 
 	@Override
+	@Transactional
 	public List<Transaction> executeTransactions(List<Transaction> transactions) {
 		transactions.forEach(Transaction::execute);
 		return transactionRepository.saveAll(transactions);
