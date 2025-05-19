@@ -2,7 +2,6 @@ package com.bankbox.domain.service.random;
 
 import com.bankbox.domain.entity.*;
 import com.bankbox.domain.service.customer.impl.CustomerService;
-import com.bankbox.infra.dto.RandomConfigurationRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -59,9 +58,9 @@ public class RandomService {
       Customer customer = Customer.builder().
         name(String.format("%s %s %s", firstName, firstSurname, secondSurname)).
         cpf(new RandomCode(RandomCodeType.NUMERIC, 11).getCode()).
-        password(new RandomCode(RandomCodeType.ALPHANUMERIC, 6).getCode()).
         bankAccounts(new ArrayList<>()).
         build();
+      customer.setPassword(new RandomCode(RandomCodeType.ALPHANUMERIC, 6).getCode());
 
       customerService.createCustomer(customer);
       generatedCustomers++;

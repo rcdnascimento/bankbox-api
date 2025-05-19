@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Builder
@@ -61,10 +62,12 @@ public class Customer {
 		this.bankAccounts.add(bankAccount);
 	}
 
-	public BigDecimal getCreditCardsLimit() {
-		if (creditCards.isEmpty()) return BigDecimal.ZERO;
+	public BigDecimal getTotalLimitFromAllCreditCards() {
+		if (Objects.isNull(creditCards) || creditCards.isEmpty()) {
+			return BigDecimal.ZERO;
+		};
 		return creditCards.stream()
-			.map(CreditCard::getCreditLimit)
+			.map(CreditCard::getLimit)
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
 }

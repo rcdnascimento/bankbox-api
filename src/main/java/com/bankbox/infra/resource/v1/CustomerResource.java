@@ -1,13 +1,14 @@
 package com.bankbox.infra.resource.v1;
 
+import com.bankbox.domain.entity.CreditCard;
 import com.bankbox.domain.entity.Customer;
+import com.bankbox.domain.service.creditcard.PersistCreditCard;
+import com.bankbox.infra.converter.CreditCardConverter;
 import com.bankbox.infra.converter.CustomerConverter;
-import com.bankbox.infra.dto.BalanceDetailsResponse;
-import com.bankbox.infra.dto.CustomerBasicDTO;
-import com.bankbox.infra.dto.CustomerDTO;
-import com.bankbox.infra.dto.CustomerRegistrationRequest;
+import com.bankbox.infra.dto.*;
 import com.bankbox.domain.service.customer.CreateCustomer;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,21 +24,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/customers")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class CustomerResource {
 
 	private final RetrieveCustomer retrieveCustomer;
 	private final CreateCustomer createCustomer;
 	private final CustomerConverter customerConverter;
-
-	public CustomerResource(
-		RetrieveCustomer retrieveCustomer,
-		CreateCustomer createCustomer,
-		CustomerConverter customerConverter
-	) {
-		this.retrieveCustomer = retrieveCustomer;
-		this.createCustomer = createCustomer;
-		this.customerConverter = customerConverter;
-	}
+	private final PersistCreditCard persistCreditCard;
+	private final CreditCardConverter creditCardConverter;
 
 	@GetMapping
 	public ResponseEntity<List<CustomerDTO>> retrieveAll() {
@@ -68,5 +62,13 @@ public class CustomerResource {
 	public ResponseEntity<BalanceDetailsResponse> retrieveCustomerBalanceDetails(@PathVariable Long id) {
 		Customer customerFound = retrieveCustomer.retrieveById(id);
 		return ResponseEntity.ok(customerConverter.toBalanceDetails(customerFound));
+	}
+
+	@PostMapping("/{id}/credit-cards")
+	public ResponseEntity<CreditCardResponse> addCreditCard(@PathVariable Long id, @RequestBody CreditCardRequest creditCardRequest) {
+		CreditCard creditCardEntity = creditCardConverter.toEntity(creditCardRequest, id);
+		CreditCard creditCardCreated = persistCreditCard.addCreditCard(creditCardEntity);
+
+		return ResponseEntity.ok(creditCardConverter.toResponse(creditCardCreated));
 	}
 }

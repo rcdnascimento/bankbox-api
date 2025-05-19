@@ -6,10 +6,13 @@ import com.bankbox.domain.entity.BankName;
 import com.bankbox.domain.entity.Customer;
 import com.bankbox.domain.exception.CustomerAlreadyExistsException;
 import com.bankbox.domain.exception.CustomerNotFoundException;
+import com.bankbox.domain.service.bankaccount.impl.BankAccountService;
 import com.bankbox.infra.repository.CustomerRepository;
 import com.bankbox.domain.service.customer.CreateCustomer;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -18,43 +21,54 @@ import java.util.Optional;
 import java.util.Random;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerService implements RetrieveCustomer, CreateCustomer {
 
 	private final CustomerRepository customerRepository;
-
-	public CustomerService(CustomerRepository customerRepository) {
-		this.customerRepository = customerRepository;
-	}
+	private final BankAccountService bankAccountService;
 
 	@Override
 	public List<Customer> retrieveAll() {
-		return customerRepository.findAll();
+		return customerRepository.findAllCustomers();
 	}
 
 	@Override
 	public Customer retrieveById(Long id) {
-		return customerRepository.findById(id).orElseThrow(CustomerNotFoundException::new);
+		return customerRepository.findCustomerById(id).orElseThrow(CustomerNotFoundException::new);
 	}
 
 	@Override
 	public Customer retrieveByCpf(String cpf) {
-		return customerRepository.findByCpf(cpf).orElseThrow(CustomerNotFoundException::new);
+		return customerRepository.findCustomerByCpf(cpf).orElseThrow(CustomerNotFoundException::new);
 	}
 
 	@Override
 	public boolean existsById(Long id) {
-		return customerRepository.existsById(id);
+		try {
+			return customerRepository.customerExistsById(id) == 1;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	@Override
+	@Transactional
 	public Customer createCustomer(Customer customer) {
-		Optional<Customer> existentCustomer = customerRepository.findByCpf(customer.getCpf());
+		Optional<Customer> existentCustomer = customerRepository.findCustomerByCpf(customer.getCpf());
 		if (existentCustomer.isPresent()) {
 			throw new CustomerAlreadyExistsException();
 		}
 
-		Customer createdCustomer = addRandomBankAccounts(customer);
-		return customerRepository.save(createdCustomer);
+		Customer generatedCustomer = addRandomBankAccounts(customer);
+		customerRepository.insertCustomer(generatedCustomer.getName(), generatedCustomer.getCpf(), generatedCustomer.getPassword());
+		Customer createdCustomer = customerRepository.retrieveLastCreated();
+
+		for (BankAccount bankAccount : generatedCustomer.getBankAccounts()) {
+			bankAccount.setOwner(createdCustomer);
+			bankAccountService.addBankAccount(bankAccount);
+		}
+
+		return createdCustomer;
 	}
 
 	private Customer addRandomBankAccounts(Customer customer) {

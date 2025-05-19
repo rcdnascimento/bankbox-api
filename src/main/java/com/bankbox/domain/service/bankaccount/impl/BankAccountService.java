@@ -22,30 +22,38 @@ import java.util.Random;
 public class BankAccountService implements PersistBankAccount, RetrieveBankAccount {
 
 	private final BankAccountRepository bankAccountRepository;
-	private final RetrieveCustomer retrieveCustomer;
 
-	public BankAccountService(BankAccountRepository bankAccountRepository, RetrieveCustomer retrieveCustomer) {
+	public BankAccountService(BankAccountRepository bankAccountRepository) {
 		this.bankAccountRepository = bankAccountRepository;
-		this.retrieveCustomer = retrieveCustomer;
 	}
 
 	@Override
-	public BankAccount saveBankAccount(BankAccount bankAccount) {
-		Customer customer = retrieveCustomer.retrieveById(bankAccount.getOwner().getId());
-		validateCustomerDoesNotHaveBank(customer, bankAccount.getBankName());
-		BankAccount generatedBankAccount = generateFakeBankAccount(customer, bankAccount.getBankName(), BankAccountType.CHECKING);
-		return bankAccountRepository.save(generatedBankAccount);
+	public BankAccount addBankAccount(BankAccount bankAccount) {
+		Long customerId = bankAccount.getOwner().getId();
+		List<BankAccount> customerAccounts = bankAccountRepository.findByOwnerId(customerId);
+		validateCustomerDoesNotHaveBank(customerAccounts, bankAccount.getBankName());
+
+		BankAccount account = generateFakeBankAccount(bankAccount.getBankName(), BankAccountType.CHECKING);
+		bankAccountRepository.insert(
+			account.getBankName().name(),
+			account.getAgency(),
+			account.getAccount(),
+			account.getType().name(),
+			account.getBalance(),
+			customerId
+		);
+
+		return bankAccountRepository.retrieveLastCreated();
 	}
 
 	@Override
 	public BankAccount retrieveByPixKey(String pixKey) {
-		Optional<BankAccount> bankAccount = bankAccountRepository.findByPixKey(pixKey);
-		if (bankAccount.isEmpty()) throw new BankAccountNotFoundException();
-		return bankAccount.get();
+		return bankAccountRepository.findByPixKey(pixKey).
+			orElseThrow(BankAccountNotFoundException::new);
 	}
 
-	private void validateCustomerDoesNotHaveBank(Customer customer, BankName bankName) {
-		boolean customerHasBank = customer.getBankAccounts().stream()
+	private void validateCustomerDoesNotHaveBank(List<BankAccount> customerAccounts, BankName bankName) {
+		boolean customerHasBank = customerAccounts.stream()
 			.anyMatch(bankAccount -> bankAccount.getBankName() == bankName);
 
 		if (customerHasBank) {
@@ -70,8 +78,8 @@ public class BankAccountService implements PersistBankAccount, RetrieveBankAccou
 		return bankAccountFound.get();
 	}
 
-	private BankAccount generateFakeBankAccount(Customer owner, BankName bankName, BankAccountType type) {
-		return new BankAccount(owner, bankName, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
+	private BankAccount generateFakeBankAccount(BankName bankName, BankAccountType type) {
+		return new BankAccount(null, bankName, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
 	}
 
 	private BigDecimal generateRandomBalance() {

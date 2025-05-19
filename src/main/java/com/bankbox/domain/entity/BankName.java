@@ -1,5 +1,8 @@
 package com.bankbox.domain.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum BankName {
 	BRADESCO("Bradesco", "#cc092f", "../../assets/imgs/banks/bradesco.png"),
 	BANCO_DO_BRASIL("Banco do Brasil", "", "../../assets/imgs/banks/banco_do_brasil.png"),
@@ -15,17 +18,5 @@ public enum BankName {
 		this.formattedName = formattedName;
 		this.backgroundColor = backgroundColor;
 		this.imgUrl = imgUrl;
-	}
-
-	public String getFormattedName() {
-		return formattedName;
-	}
-
-	public String getBackgroundColor() {
-		return backgroundColor;
-	}
-
-	public String getImgUrl() {
-		return imgUrl;
 	}
 }

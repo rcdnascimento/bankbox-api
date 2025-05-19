@@ -18,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String cpf) throws UsernameNotFoundException {
-		Optional<Customer> customer = customerRepository.findByCpf(cpf);
+		Optional<Customer> customer = customerRepository.findCustomerByCpf(cpf);
 		if (customer.isEmpty()) {
 			throw new IllegalArgumentException("Customer does not exist");
 		}

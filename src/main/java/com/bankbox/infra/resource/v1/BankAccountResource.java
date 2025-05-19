@@ -50,7 +50,7 @@ public class BankAccountResource {
 	@PostMapping
 	public ResponseEntity<BankAccountResponse> addBank(@RequestBody BankAccountRequest request) {
 		BankAccount bankAccount = bankAccountConverter.toDomain(request);
-		BankAccount createdBankAccount = persistBankAccount.saveBankAccount(bankAccount);
+		BankAccount createdBankAccount = persistBankAccount.addBankAccount(bankAccount);
 		return ResponseEntity.ok(bankAccountConverter.toResponse(createdBankAccount));
 	}
 

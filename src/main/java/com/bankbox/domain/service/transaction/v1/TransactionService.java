@@ -36,6 +36,7 @@ public class TransactionService implements ExecuteTransaction, RetrieveTransacti
 			throw new CustomerNotFoundException();
 		}
 
-		return transactionRepository.findBySourceOrBeneficiary(id);
+		List<Transaction> found = transactionRepository.findBySourceOrBeneficiary(id);;
+		return found;
 	}
 }
