@@ -1,7 +1,6 @@
 package com.bankbox.domain.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -10,6 +9,9 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreditCard {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

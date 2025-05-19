@@ -1,12 +1,10 @@
 package com.bankbox.domain.service.customer.impl;
 
-import com.bankbox.domain.entity.BankAccount;
-import com.bankbox.domain.entity.BankAccountType;
-import com.bankbox.domain.entity.BankName;
-import com.bankbox.domain.entity.Customer;
+import com.bankbox.domain.entity.*;
 import com.bankbox.domain.exception.CustomerAlreadyExistsException;
 import com.bankbox.domain.exception.CustomerNotFoundException;
 import com.bankbox.domain.service.bankaccount.impl.BankAccountService;
+import com.bankbox.domain.service.creditcard.impl.CreditCardService;
 import com.bankbox.infra.repository.CustomerRepository;
 import com.bankbox.domain.service.customer.CreateCustomer;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
@@ -26,6 +24,9 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 
 	private final CustomerRepository customerRepository;
 	private final BankAccountService bankAccountService;
+	private final CreditCardService creditCardService;
+
+	private static final String DEFAULT_EXPIRATION = "2031-06";
 
 	@Override
 	public List<Customer> retrieveAll() {
@@ -59,7 +60,7 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 			throw new CustomerAlreadyExistsException();
 		}
 
-		Customer generatedCustomer = addRandomBankAccounts(customer);
+		Customer generatedCustomer = addRandomData(customer);
 		customerRepository.insertCustomer(generatedCustomer.getName(), generatedCustomer.getCpf(), generatedCustomer.getPassword());
 		Customer createdCustomer = customerRepository.retrieveLastCreated();
 
@@ -68,7 +69,17 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 			bankAccountService.addBankAccount(bankAccount);
 		}
 
+		for (CreditCard creditCard : generatedCustomer.getCreditCards()) {
+			creditCard.setCustomer(createdCustomer);
+			creditCardService.addCreditCard(creditCard);
+		}
+
 		return createdCustomer;
+	}
+
+	private Customer addRandomData(Customer customer) {
+		Customer withBanks = addRandomBankAccounts(customer);
+		return addRandomCreditCards(withBanks);
 	}
 
 	private Customer addRandomBankAccounts(Customer customer) {
@@ -79,8 +90,40 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 		return customer;
 	}
 
+	private Customer addRandomCreditCards(Customer customer) {
+		CreditCard visa = generateFakeCreditCard(customer, CreditCardType.VIRTUAL, "VISA");
+		CreditCard mastercard = generateFakeCreditCard(customer, CreditCardType.PHYSICAL, "MASTERCARD");
+		customer.addCreditCard(visa);
+		customer.addCreditCard(mastercard);
+		return customer;
+	}
+
 	private BankAccount generateFakeBankAccount(Customer owner, BankName bankName, BankAccountType type) {
 		return new BankAccount(owner, bankName, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
+	}
+
+	private CreditCard generateFakeCreditCard(Customer owner, CreditCardType type, String brand) {
+		return CreditCard.builder()
+			.ownerName(owner.getName())
+			.number(generateCardNumber())
+			.securityNumber(generateSecurityNumber())
+			.brand(brand)
+			.expiration(DEFAULT_EXPIRATION)
+			.type(type)
+			.limit(BigDecimal.valueOf(500 + new Random().nextInt(1000)))
+			.build();
+	}
+
+	private Integer generateSecurityNumber() {
+		return 100 + new Random().nextInt(899);
+	}
+
+	private String generateCardNumber() {
+		String number = "";
+		for (int i = 0; i < 4; i++) {
+			number = number.concat(String.valueOf(1000 + new Random().nextInt(8999)));
+		}
+		return number;
 	}
 
 	private BigDecimal generateRandomBalance() {

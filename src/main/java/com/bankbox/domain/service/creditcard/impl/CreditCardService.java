@@ -5,9 +5,10 @@ import com.bankbox.domain.entity.CreditCard;
 import com.bankbox.domain.entity.CreditCardType;
 import com.bankbox.domain.exception.CustomerNotFoundException;
 import com.bankbox.domain.service.creditcard.RetrieveCreditCard;
-import com.bankbox.domain.service.customer.RetrieveCustomer;
 import com.bankbox.infra.repository.CreditCardRepository;
 import com.bankbox.domain.service.creditcard.PersistCreditCard;
+import com.bankbox.infra.repository.CustomerRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,27 +17,24 @@ import java.util.Optional;
 import java.util.Random;
 
 @Service
+@RequiredArgsConstructor
 public class CreditCardService implements RetrieveCreditCard, PersistCreditCard {
 
 	private final CreditCardRepository creditCardRepository;
-	private final RetrieveCustomer retrieveCustomer;
+	private final CustomerRepository customerRepository;
 
 	private static final String BANKBOX_BRAND = "BANKBOX";
 	private static final String DEFAULT_EXPIRATION = "2031-06";
 
-	public CreditCardService(CreditCardRepository creditCardRepository, RetrieveCustomer retrieveCustomer) {
-		this.creditCardRepository = creditCardRepository;
-		this.retrieveCustomer = retrieveCustomer;
-	}
 
 	@Override
-	public List<CreditCard> findAllByCustomerId(Long customerId) {
+	public List<CreditCard> retrieveByCustomerId(Long customerId) {
 		return creditCardRepository.findByCustomerId(customerId);
 	}
 
 	@Override
 	public CreditCard addCreditCard(CreditCard creditCard) {
-		if (!retrieveCustomer.existsById(creditCard.getCustomer().getId())) {
+		if (!customerRepository.existsById(creditCard.getCustomer().getId())) {
 			throw new CustomerNotFoundException();
 		}
 
@@ -45,7 +43,7 @@ public class CreditCardService implements RetrieveCreditCard, PersistCreditCard 
 
 	@Override
 	public CreditCard generateUnifiedCardForCustumer(Long customerId) {
-		Customer customer = retrieveCustomer.retrieveById(customerId);
+		Customer customer = customerRepository.findCustomerById(customerId).orElseThrow(CustomerNotFoundException::new);
 		Optional<CreditCard> currentUnifiedCard = customer.getCreditCards().stream()
 			.filter(card -> Objects.equals(card.brand, BANKBOX_BRAND)).findFirst();
 

@@ -2,12 +2,10 @@ package com.bankbox.infra.resource.v1;
 
 import com.bankbox.infra.converter.CreditCardConverter;
 import com.bankbox.domain.entity.CreditCard;
-import com.bankbox.infra.dto.CreditCardRequest;
 import com.bankbox.infra.dto.CreditCardResponse;
 import com.bankbox.domain.service.creditcard.PersistCreditCard;
 import com.bankbox.domain.service.creditcard.RetrieveCreditCard;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,7 +31,7 @@ public class CreditCardResource {
 
 	@GetMapping
 	public ResponseEntity<List<CreditCardResponse>> retrieveCreditCards(@RequestParam(value = "customer_id", required = true) Long customerId) {
-		List<CreditCard> creditCards = retrieveCreditCard.findAllByCustomerId(customerId);
+		List<CreditCard> creditCards = retrieveCreditCard.retrieveByCustomerId(customerId);
 		return ResponseEntity.ok(creditCardConverter.toResponse(creditCards));
 	}
 

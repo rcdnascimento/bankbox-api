@@ -59,7 +59,19 @@ public class Customer {
 	}
 
 	public void addBankAccount(BankAccount bankAccount) {
+		if (Objects.isNull(bankAccounts)) {
+			bankAccounts = new ArrayList<>();
+		}
+
 		this.bankAccounts.add(bankAccount);
+	}
+
+	public void addCreditCard(CreditCard creditCard) {
+		if (Objects.isNull(creditCards)) {
+			creditCards = new ArrayList<>();
+		}
+
+		this.creditCards.add(creditCard);
 	}
 
 	public BigDecimal getTotalLimitFromAllCreditCards() {
