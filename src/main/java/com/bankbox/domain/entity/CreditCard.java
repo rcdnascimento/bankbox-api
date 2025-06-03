@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Getter
@@ -35,6 +36,8 @@ public class CreditCard {
 	@NotNull
 	@Column(name = "`limit`")
 	public BigDecimal limit;
+	@OneToMany(mappedBy = "creditCard", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<CreditCardInvoice> invoices;
 
 	private static final int SECURITY_NUMBER_LENGTH = 3;
 	private static final int CREDIT_CARD_LENGTH = 16;

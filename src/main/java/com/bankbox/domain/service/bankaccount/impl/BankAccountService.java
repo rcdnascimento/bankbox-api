@@ -1,9 +1,6 @@
 package com.bankbox.domain.service.bankaccount.impl;
 
-import com.bankbox.domain.entity.BankAccount;
-import com.bankbox.domain.entity.BankAccountType;
-import com.bankbox.domain.entity.BankName;
-import com.bankbox.domain.entity.Customer;
+import com.bankbox.domain.entity.*;
 import com.bankbox.domain.service.bankaccount.PersistBankAccount;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
 import com.bankbox.domain.exception.BankAccountNotFoundException;
@@ -31,17 +28,10 @@ public class BankAccountService implements PersistBankAccount, RetrieveBankAccou
 	public BankAccount addBankAccount(BankAccount bankAccount) {
 		Long customerId = bankAccount.getOwner().getId();
 		List<BankAccount> customerAccounts = bankAccountRepository.findByOwnerId(customerId);
-		validateCustomerDoesNotHaveBank(customerAccounts, bankAccount.getBankName());
+		validateCustomerDoesNotHaveBank(customerAccounts, bankAccount.getBank());
 
-		BankAccount account = generateFakeBankAccount(bankAccount.getBankName(), BankAccountType.CHECKING);
-		bankAccountRepository.insert(
-			account.getBankName().name(),
-			account.getAgency(),
-			account.getAccount(),
-			account.getType().name(),
-			account.getBalance(),
-			customerId
-		);
+		BankAccount account = generateFakeBankAccount(bankAccount.getBank(), BankAccountType.CHECKING);
+		bankAccountRepository.save(account);
 
 		return bankAccountRepository.retrieveLastCreated();
 	}
@@ -52,9 +42,9 @@ public class BankAccountService implements PersistBankAccount, RetrieveBankAccou
 			orElseThrow(BankAccountNotFoundException::new);
 	}
 
-	private void validateCustomerDoesNotHaveBank(List<BankAccount> customerAccounts, BankName bankName) {
+	private void validateCustomerDoesNotHaveBank(List<BankAccount> customerAccounts, Bank bank) {
 		boolean customerHasBank = customerAccounts.stream()
-			.anyMatch(bankAccount -> bankAccount.getBankName() == bankName);
+			.anyMatch(bankAccount -> bankAccount.getBank().getName().equals(bank.getName()));
 
 		if (customerHasBank) {
 			throw new CustomerAlreadyHasBankException();
@@ -78,8 +68,8 @@ public class BankAccountService implements PersistBankAccount, RetrieveBankAccou
 		return bankAccountFound.get();
 	}
 
-	private BankAccount generateFakeBankAccount(BankName bankName, BankAccountType type) {
-		return new BankAccount(null, bankName, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
+	private BankAccount generateFakeBankAccount(Bank bank, BankAccountType type) {
+		return new BankAccount(null, bank, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
 	}
 
 	private BigDecimal generateRandomBalance() {

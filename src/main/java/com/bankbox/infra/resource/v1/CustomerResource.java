@@ -2,7 +2,9 @@ package com.bankbox.infra.resource.v1;
 
 import com.bankbox.domain.entity.CreditCard;
 import com.bankbox.domain.entity.Customer;
+import com.bankbox.domain.entity.CustomerRegistration;
 import com.bankbox.domain.service.creditcard.PersistCreditCard;
+import com.bankbox.domain.service.customer.impl.CustomerService;
 import com.bankbox.infra.converter.CreditCardConverter;
 import com.bankbox.infra.converter.CustomerConverter;
 import com.bankbox.infra.dto.*;
@@ -32,6 +34,7 @@ public class CustomerResource {
 	private final CustomerConverter customerConverter;
 	private final PersistCreditCard persistCreditCard;
 	private final CreditCardConverter creditCardConverter;
+	private final CustomerService customerService;
 
 	@GetMapping
 	public ResponseEntity<List<CustomerDTO>> retrieveAll() {
@@ -40,10 +43,16 @@ public class CustomerResource {
 	}
 
 	@PostMapping
-	public ResponseEntity<CustomerDTO> createCustomer(@Valid  @RequestBody CustomerRegistrationRequest customerRegistrationRequest) {
-		Customer customer = customerConverter.toCustomer(customerRegistrationRequest);
-		Customer customerCreated = createCustomer.createCustomer(customer);
-		return ResponseEntity.ok(customerConverter.toDTO(customerCreated));
+	public ResponseEntity<CustomerRegistrationResponse> registerCustomer(@Valid  @RequestBody CustomerRegistrationRequest customerRegistrationRequest) {
+		CustomerRegistration registration = customerConverter.toEntity(customerRegistrationRequest);
+		CustomerRegistration customerCreated = createCustomer.registerCustomer(registration);
+		return ResponseEntity.ok(customerConverter.toResponse(customerCreated));
+	}
+
+	@PostMapping("/registrationId/confirm")
+	public ResponseEntity<CustomerDTO> confirmRegistration(@PathVariable Long registrationId, @RequestBody ConfirmRegistrationRequest request) {
+		Customer createdCustomer = customerService.confirmRegistration(registrationId, request.code);
+		return ResponseEntity.ok(customerConverter.toDTO(createdCustomer));
 	}
 
 	@GetMapping("/{id}")

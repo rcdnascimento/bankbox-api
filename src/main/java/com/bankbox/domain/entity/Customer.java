@@ -78,7 +78,9 @@ public class Customer {
 		if (Objects.isNull(creditCards) || creditCards.isEmpty()) {
 			return BigDecimal.ZERO;
 		};
+
 		return creditCards.stream()
+			.filter(creditCard -> !creditCard.brand.equals("BANKBOX"))
 			.map(CreditCard::getLimit)
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
 	}

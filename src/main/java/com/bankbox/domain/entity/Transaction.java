@@ -6,14 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,9 +22,11 @@ public class Transaction {
 	private Long id;
 	@NotNull
 	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "source_id")
 	private BankAccount source;
 	@NotNull
 	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "beneficiary_id")
 	private BankAccount beneficiary;
 	@NotNull
 	private BigDecimal value;

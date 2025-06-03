@@ -12,12 +12,10 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = {BankConverter.class, CustomerConverter.class})
 public interface BankAccountConverter {
 	@Mapping(source = "owner.id", target = "customerId")
-	@Mapping(source = "bankName", target = "bank")
 	BankAccountResponse toResponse(BankAccount bankAccount);
 	List<BankAccountResponse> toResponse(List<BankAccount> bankAccount);
 	@Mapping(source = "customerId", target = "owner.id")
 	BankAccount toDomain(BankAccountRequest bankAccountRequest);
 	@Mapping(expression = "java(bankAccount.getOwner().getFirstName())", target = "customerFirstName")
-	@Mapping(source = "bankName", target = "bank")
 	BankAccountBasicResponse toBasicResponse(BankAccount bankAccount);
 }

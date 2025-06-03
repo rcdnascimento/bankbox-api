@@ -48,7 +48,9 @@ public class CreditCardService implements RetrieveCreditCard, PersistCreditCard 
 			.filter(card -> Objects.equals(card.brand, BANKBOX_BRAND)).findFirst();
 
 		if (currentUnifiedCard.isPresent()) {
-			return currentUnifiedCard.get();
+			CreditCard currentUnifiedCreditCard = currentUnifiedCard.get();
+			currentUnifiedCreditCard.setLimit(customer.getTotalLimitFromAllCreditCards());
+			return currentUnifiedCreditCard;
 		}
 
 		CreditCard unifiedCard = new CreditCard();

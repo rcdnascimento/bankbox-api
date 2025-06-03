@@ -5,14 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
@@ -28,8 +21,9 @@ public class BankAccount {
 	@ManyToOne
 	private Customer owner;
 	@NotNull
-	@Enumerated(EnumType.STRING)
-	private BankName bankName;
+	@ManyToOne
+	@JoinColumn(name = "bank_id")
+	private Bank bank;
 	@NotNull
 	@Enumerated(EnumType.STRING)
 	private BankAccountType type;
@@ -42,9 +36,9 @@ public class BankAccount {
 	@Column(unique = true)
 	private String pixKey;
 
-	public BankAccount(Customer owner, BankName bankName, BankAccountType type, BigDecimal balance, String agency, String account) {
+	public BankAccount(Customer owner, Bank bank, BankAccountType type, BigDecimal balance, String agency, String account) {
 		this.owner = owner;
-		this.bankName = bankName;
+		this.bank = bank;
 		this.type = type;
 		this.balance = balance;
 		this.agency = agency;

@@ -3,12 +3,15 @@ package com.bankbox.domain.service.customer.impl;
 import com.bankbox.domain.entity.*;
 import com.bankbox.domain.exception.CustomerAlreadyExistsException;
 import com.bankbox.domain.exception.CustomerNotFoundException;
+import com.bankbox.domain.exception.InvalidRegistrationCode;
 import com.bankbox.domain.service.bankaccount.impl.BankAccountService;
 import com.bankbox.domain.service.creditcard.impl.CreditCardService;
+import com.bankbox.infra.repository.CustomerRegistrationRepository;
 import com.bankbox.infra.repository.CustomerRepository;
 import com.bankbox.domain.service.customer.CreateCustomer;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,7 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 	private final CustomerRepository customerRepository;
 	private final BankAccountService bankAccountService;
 	private final CreditCardService creditCardService;
+	private final CustomerRegistrationRepository customerRegistrationRepository;
 
 	private static final String DEFAULT_EXPIRATION = "2031-06";
 
@@ -50,6 +54,31 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	public CustomerRegistration registerCustomer(CustomerRegistration customerRegistration) {
+		validatePassword(customerRegistration);
+
+		return customerRegistrationRepository.save(customerRegistration);
+	}
+
+	private void validatePassword(CustomerRegistration registration) {
+
+	}
+
+	@Override
+	@Transactional
+	public Customer confirmRegistration(Long registrationId, String code) {
+		CustomerRegistration registrationFound = customerRegistrationRepository.findByIdAndCode(registrationId, code)
+			.orElseThrow(InvalidRegistrationCode::new);
+
+		Customer customer = Customer.builder()
+			.name(registrationFound.getName())
+			.cpf(registrationFound.getCpf())
+			.password(new BCryptPasswordEncoder().encode(registrationFound.getPassword()))
+			.build();
+
+		return createCustomer(customer);
 	}
 
 	@Override
@@ -99,7 +128,7 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 	}
 
 	private BankAccount generateFakeBankAccount(Customer owner, BankName bankName, BankAccountType type) {
-		return new BankAccount(owner, bankName, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
+		return new BankAccount(owner, new Bank(bankName), type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
 	}
 
 	private CreditCard generateFakeCreditCard(Customer owner, CreditCardType type, String brand) {

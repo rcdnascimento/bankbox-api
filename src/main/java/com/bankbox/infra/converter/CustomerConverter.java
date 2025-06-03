@@ -2,10 +2,8 @@ package com.bankbox.infra.converter;
 
 import com.bankbox.domain.entity.BankAccountType;
 import com.bankbox.domain.entity.Customer;
-import com.bankbox.infra.dto.BalanceDetailsResponse;
-import com.bankbox.infra.dto.CustomerBasicDTO;
-import com.bankbox.infra.dto.CustomerDTO;
-import com.bankbox.infra.dto.CustomerRegistrationRequest;
+import com.bankbox.domain.entity.CustomerRegistration;
+import com.bankbox.infra.dto.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -21,6 +19,10 @@ public interface CustomerConverter {
 	List<CustomerDTO> toDTO(List<Customer> customers);
 
 	Customer toCustomer(CustomerRegistrationRequest customerRegistrationRequest);
+
+	CustomerRegistration toEntity(CustomerRegistrationRequest registrationRequest);
+
+	CustomerRegistrationResponse toResponse(CustomerRegistration customerRegistration);
 
 	@Mapping(source = "id", target = "customerId")
 	@Mapping(expression = "java(customer.getBalance())", target = "totalBalance")
