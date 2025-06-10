@@ -3,6 +3,7 @@ package com.bankbox.domain.service.creditcard.impl;
 import com.bankbox.domain.entity.Customer;
 import com.bankbox.domain.entity.CreditCard;
 import com.bankbox.domain.entity.CreditCardType;
+import com.bankbox.domain.exception.CreditCardNotFoundException;
 import com.bankbox.domain.exception.CustomerNotFoundException;
 import com.bankbox.domain.service.creditcard.RetrieveCreditCard;
 import com.bankbox.infra.repository.CreditCardRepository;
@@ -39,6 +40,11 @@ public class CreditCardService implements RetrieveCreditCard, PersistCreditCard 
 		}
 
 		return insertCreditCard(creditCard);
+	}
+
+	@Override
+	public CreditCard retrieveById(Long id) {
+		return creditCardRepository.findById(id).orElseThrow(CreditCardNotFoundException::new);
 	}
 
 	@Override

@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface RetrieveCreditCard {
 	List<CreditCard> retrieveByCustomerId(Long customerId);
+	CreditCard retrieveById(Long id);
 }
