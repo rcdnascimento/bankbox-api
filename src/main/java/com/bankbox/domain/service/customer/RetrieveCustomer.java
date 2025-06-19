@@ -9,4 +9,5 @@ public interface RetrieveCustomer {
 	Customer retrieveById(Long id);
 	Customer retrieveByCpf(String cpf);
 	boolean existsById(Long id);
+	long countCustomers();
 }

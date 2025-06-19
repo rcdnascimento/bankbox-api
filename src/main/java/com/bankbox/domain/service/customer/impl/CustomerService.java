@@ -10,6 +10,7 @@ import com.bankbox.infra.repository.CustomerRegistrationRepository;
 import com.bankbox.infra.repository.CustomerRepository;
 import com.bankbox.domain.service.customer.CreateCustomer;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
+import com.bankbox.infra.repository.PixKeyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,12 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 	private final CustomerRegistrationRepository customerRegistrationRepository;
 
 	private static final String DEFAULT_EXPIRATION = "2031-06";
+	private final PixKeyRepository pixKeyRepository;
+
+	@Override
+	public long countCustomers() {
+		return customerRepository.count();
+	}
 
 	@Override
 	public List<Customer> retrieveAll() {
@@ -58,6 +66,8 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 
 	public CustomerRegistration registerCustomer(CustomerRegistration customerRegistration) {
 		validatePassword(customerRegistration);
+
+		customerRegistration.setCode(new RandomCode(RandomCodeType.ALPHANUMERIC, 4).toString());
 
 		return customerRegistrationRepository.save(customerRegistration);
 	}
@@ -93,15 +103,21 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 		customerRepository.insertCustomer(generatedCustomer.getName(), generatedCustomer.getCpf(), generatedCustomer.getPassword());
 		Customer createdCustomer = customerRepository.retrieveLastCreated();
 
+		BankAccount createdBankAccount = null;
+
 		for (BankAccount bankAccount : generatedCustomer.getBankAccounts()) {
 			bankAccount.setOwner(createdCustomer);
-			bankAccountService.addBankAccount(bankAccount);
+			bankAccount.setPixKeys(List.of());
+
+			createdBankAccount = bankAccountService.addBankAccount(bankAccount);
 		}
 
 		for (CreditCard creditCard : generatedCustomer.getCreditCards()) {
 			creditCard.setCustomer(createdCustomer);
-			creditCardService.addCreditCard(creditCard);
+			createdCustomer.addCreditCard(creditCardService.addCreditCard(creditCard));
 		}
+
+		pixKeyRepository.save(new PixKey(customer.getCpf(), PixTypeEnum.CPF, createdBankAccount));
 
 		return createdCustomer;
 	}
@@ -127,8 +143,32 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 		return customer;
 	}
 
+	private List<ConsentRole> getDefaultConsentRoles() {
+		ConsentRole readAccounts = new ConsentRole();
+		readAccounts.setId(1L);
+
+		ConsentRole readTransactions = new ConsentRole();
+		readTransactions.setId(2L);
+
+		ConsentRole writePayments = new ConsentRole();
+		writePayments.setId(3L);
+
+		ConsentRole manageConsents = new ConsentRole();
+		manageConsents.setId(4L);
+
+		ConsentRole readBalances = new ConsentRole();
+		readBalances.setId(5L);
+
+		return List.of(readAccounts, readTransactions, writePayments, manageConsents, readBalances);
+	}
+
 	private BankAccount generateFakeBankAccount(Customer owner, BankName bankName, BankAccountType type) {
-		return new BankAccount(owner, new Bank(bankName), type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
+		Consent consent = new Consent();
+		consent.setCustomer(owner);
+		consent.setCode(UUID.randomUUID().toString());
+		consent.setRoles(getDefaultConsentRoles());
+
+		return new BankAccount(owner, new Bank(bankName), type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber(), consent);
 	}
 
 	private CreditCard generateFakeCreditCard(Customer owner, CreditCardType type, String brand) {

@@ -8,6 +8,8 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -17,26 +19,39 @@ public class BankAccount {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@NotNull
+
 	@ManyToOne
 	private Customer owner;
-	@NotNull
+
 	@ManyToOne
 	@JoinColumn(name = "bank_id")
 	private Bank bank;
-	@NotNull
+
 	@Enumerated(EnumType.STRING)
 	private BankAccountType type;
+
 	@NotNull
 	private String agency;
+
 	@NotNull
 	private String account;
+
 	@NotNull
 	private BigDecimal balance;
-	@Column(unique = true)
-	private String pixKey;
 
-	public BankAccount(Customer owner, Bank bank, BankAccountType type, BigDecimal balance, String agency, String account) {
+	@Column(unique = true)
+	@OneToMany(mappedBy = "bankAccount")
+	private List<PixKey> pixKeys = new ArrayList<>();
+
+	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "consent_id")
+	private Consent consent;
+
+	public BankAccount(Long id) {
+		this.id = id;
+	}
+
+	public BankAccount(Customer owner, Bank bank, BankAccountType type, BigDecimal balance, String agency, String account, Consent consent) {
 		this.owner = owner;
 		this.bank = bank;
 		this.type = type;

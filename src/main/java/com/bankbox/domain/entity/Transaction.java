@@ -20,19 +20,22 @@ public class Transaction {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@NotNull
-	@ManyToOne(cascade = CascadeType.ALL)
+
+	@ManyToOne
 	@JoinColumn(name = "source_id")
 	private BankAccount source;
-	@NotNull
-	@ManyToOne(cascade = CascadeType.ALL)
+
+	@ManyToOne
 	@JoinColumn(name = "beneficiary_id")
 	private BankAccount beneficiary;
+
 	@NotNull
 	private BigDecimal value;
+
 	@NotNull
 	@Enumerated(EnumType.STRING)
 	private TransactionType type;
+
 	@NotNull
 	private LocalDateTime performedAt;
 

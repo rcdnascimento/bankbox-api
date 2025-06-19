@@ -24,7 +24,7 @@ dependencies {
 
 	annotationProcessor 'org.projectlombok:lombok'
 
-	runtimeOnly 'mysql:mysql-connector-java'
+	implementation 'mysql:mysql-connector-java:8.0.33'
 
 	annotationProcessor "org.mapstruct:mapstruct-processor:$mapstructVersion"
 

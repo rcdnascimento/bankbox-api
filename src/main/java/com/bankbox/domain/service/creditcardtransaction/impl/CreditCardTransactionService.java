@@ -37,6 +37,7 @@ public class CreditCardTransactionService implements RetrieveCreditCardTransacti
   @Override
   public CreditCardTransaction createTransaction(CreditCardTransactionRequest request) {
     CreditCard creditCard = creditCardService.retrieveById(request.creditCardId);
+
     YearMonth month = YearMonth.from(request.processedAt);
 
     Optional<CreditCardInvoice> transactionInvoice = creditCardInvoiceService.findByCreditCardAndMonth(creditCard.getId(), month);
@@ -74,11 +75,12 @@ public class CreditCardTransactionService implements RetrieveCreditCardTransacti
     List<CreditCardInstallment> installments = new ArrayList<>();
     BigDecimal installmentValue = transaction.getValue().divide(BigDecimal.valueOf(installmentsNumber), RoundingMode.CEILING);
 
-    for (int installment = 2; installment <= installmentsNumber; installment++) {
+    for (int installmentNumber = 1; installmentNumber <= installmentsNumber; installmentNumber++) {
       CreditCardInstallment creditCardInstallment = new CreditCardInstallment();
       creditCardInstallment.setTransaction(transaction);
       creditCardInstallment.setValue(installmentValue);
       creditCardInstallment.setStatus(InstallmentStatusEnum.PENDING);
+      creditCardInstallment.setNumber(installmentNumber);
       installments.add(creditCardInstallment);
     }
 

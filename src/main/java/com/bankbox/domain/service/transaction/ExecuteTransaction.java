@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ExecuteTransaction {
 	List<Transaction> executeTransactions(List<Transaction> transactions);
+	Transaction saveTransaction(Transaction transaction);
 }

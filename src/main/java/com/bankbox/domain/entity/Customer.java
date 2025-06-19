@@ -3,13 +3,7 @@ package com.bankbox.domain.entity;
 import lombok.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,15 +19,23 @@ public class Customer {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
 	private String name;
+
 	@Column(unique = true)
 	private String cpf;
+
 	@Setter(AccessLevel.NONE)
 	private String password;
-	@OneToMany(mappedBy = "owner", cascade = CascadeType.PERSIST)
+
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	private List<BankAccount> bankAccounts = new ArrayList<>();
-	@OneToMany(mappedBy = "customer", cascade = CascadeType.PERSIST)
+
+	@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<CreditCard> creditCards = new ArrayList<>();
+
+	@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+	private List<UnifiedCreditCard> unifiedCreditCards = new ArrayList<>();
 
 	public BigDecimal getBalance() {
 		return bankAccounts.stream()

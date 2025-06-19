@@ -2,35 +2,55 @@ package com.bankbox.domain.service.bankaccount.impl;
 
 import com.bankbox.domain.entity.*;
 import com.bankbox.domain.service.bankaccount.PersistBankAccount;
+import com.bankbox.domain.service.consent.ConsentServiceImpl;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
 import com.bankbox.domain.exception.BankAccountNotFoundException;
 import com.bankbox.domain.exception.CustomerAlreadyHasBankException;
 import com.bankbox.infra.repository.BankAccountRepository;
 import com.bankbox.domain.service.bankaccount.RetrieveBankAccount;
+import com.bankbox.infra.repository.BankRepository;
+import com.bankbox.infra.repository.ConsentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class BankAccountService implements PersistBankAccount, RetrieveBankAccount {
 
 	private final BankAccountRepository bankAccountRepository;
-
-	public BankAccountService(BankAccountRepository bankAccountRepository) {
-		this.bankAccountRepository = bankAccountRepository;
-	}
+	private final ConsentRepository consentRepository;
+	private final ConsentServiceImpl consentService;
+	private final BankRepository bankRepository;
 
 	@Override
+	@Transactional
 	public BankAccount addBankAccount(BankAccount bankAccount) {
-		Long customerId = bankAccount.getOwner().getId();
-		List<BankAccount> customerAccounts = bankAccountRepository.findByOwnerId(customerId);
+		Customer customer = bankAccount.getOwner();
+		List<BankAccount> customerAccounts = bankAccountRepository.findByOwnerId(customer.getId());
 		validateCustomerDoesNotHaveBank(customerAccounts, bankAccount.getBank());
 
+		Bank bankFound = bankRepository.findById(bankAccount.getBank().getId()).orElseThrow(BankAccountNotFoundException::new);
+
 		BankAccount account = generateFakeBankAccount(bankAccount.getBank(), BankAccountType.CHECKING);
+
+		Consent consent = new Consent();
+		consent.setRoles(getDefaultConsentRoles());
+		consent.setCode(UUID.randomUUID().toString());
+		consent.setCustomer(customer);
+		consent.setBank(bankFound);
+
+		account.setOwner(customer);
+		account.setConsent(consent);
+		account.setBank(bankFound);
+
 		bankAccountRepository.save(account);
 
 		return bankAccountRepository.retrieveLastCreated();
@@ -68,8 +88,27 @@ public class BankAccountService implements PersistBankAccount, RetrieveBankAccou
 		return bankAccountFound.get();
 	}
 
+	private List<ConsentRole> getDefaultConsentRoles() {
+		ConsentRole readAccounts = new ConsentRole();
+		readAccounts.setId(1L);
+
+		ConsentRole readTransactions = new ConsentRole();
+		readTransactions.setId(2L);
+
+		ConsentRole writePayments = new ConsentRole();
+		writePayments.setId(3L);
+
+		ConsentRole manageConsents = new ConsentRole();
+		manageConsents.setId(4L);
+
+		ConsentRole readBalances = new ConsentRole();
+		readBalances.setId(5L);
+
+		return List.of(readAccounts, readTransactions, writePayments, manageConsents, readBalances);
+	}
+
 	private BankAccount generateFakeBankAccount(Bank bank, BankAccountType type) {
-		return new BankAccount(null, bank, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber());
+		return new BankAccount(null, bank, type, generateRandomBalance(), generateRandomAgency(), generateRandomNumber(), null);
 	}
 
 	private BigDecimal generateRandomBalance() {

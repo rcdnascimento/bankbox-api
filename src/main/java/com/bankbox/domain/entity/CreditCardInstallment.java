@@ -16,11 +16,17 @@ public class CreditCardInstallment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
 	@Column(nullable = false)
 	private BigDecimal value;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private InstallmentStatusEnum status;
+
+	@Column(name = "`number`", nullable = false)
+	private Integer number;
+
 	@ManyToOne
 	@JoinColumn(name = "transaction_id", nullable = false)
 	private CreditCardTransaction transaction;

@@ -1,11 +1,16 @@
 package com.bankbox.infra.resource.v1;
 
+import com.bankbox.domain.entity.CreditCardInvoice;
 import com.bankbox.domain.entity.CreditCardTransaction;
+import com.bankbox.domain.entity.UnifiedCreditCard;
+import com.bankbox.domain.service.creditcardinvoice.CreditCardInvoiceService;
 import com.bankbox.domain.service.creditcardtransaction.PersistCreditCardTransaction;
 import com.bankbox.domain.service.creditcardtransaction.RetrieveCreditCardTransaction;
 import com.bankbox.infra.converter.CreditCardConverter;
 import com.bankbox.domain.entity.CreditCard;
+import com.bankbox.infra.converter.CreditCardInvoiceConverter;
 import com.bankbox.infra.converter.CreditCardTransactionConverter;
+import com.bankbox.infra.dto.CreditCardInvoiceResponse;
 import com.bankbox.infra.dto.CreditCardResponse;
 import com.bankbox.domain.service.creditcard.PersistCreditCard;
 import com.bankbox.domain.service.creditcard.RetrieveCreditCard;
@@ -18,7 +23,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/credit-cards")
@@ -32,6 +39,8 @@ public class CreditCardResource {
 	private final RetrieveCreditCardTransaction retrieveCreditCardTransaction;
 	private final PersistCreditCardTransaction persistCreditCardTransaction;
 	private final CreditCardTransactionConverter creditCardTransactionConverter;
+	private final CreditCardInvoiceService creditCardInvoiceService;
+	private final CreditCardInvoiceConverter creditCardInvoiceConverter;
 
 	@GetMapping
 	public ResponseEntity<List<CreditCardResponse>> retrieveCreditCards(@RequestParam(value = "customer_id", required = true) Long customerId) {
@@ -41,7 +50,7 @@ public class CreditCardResource {
 
 	@PostMapping("/unified")
 	public ResponseEntity<CreditCardResponse> generateUnifiedCard(@RequestParam(value = "customer_id", required = true) Long customerId) {
-		CreditCard unifiedCreditCard = persistCreditCard.generateUnifiedCardForCustumer(customerId);
+		UnifiedCreditCard unifiedCreditCard = persistCreditCard.generateUnifiedCardForCustumer(customerId);
 		return ResponseEntity.ok(creditCardConverter.toResponse(unifiedCreditCard));
 	}
 
@@ -63,5 +72,15 @@ public class CreditCardResource {
 		CreditCardTransaction createdTransaction = persistCreditCardTransaction.createTransaction(transaction);
 		CreditCardTransactionResponse response = creditCardTransactionConverter.toResponse(createdTransaction);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	}
+
+	@GetMapping("/{id}/invoices")
+	public ResponseEntity<List<CreditCardInvoiceResponse>> retrieveInvoices(@PathVariable Long id, @RequestParam(required = false) String yearMonth) {
+		YearMonth month = Optional.ofNullable(yearMonth)
+			.map(YearMonth::parse)
+			.orElse(null);
+
+		List<CreditCardInvoice> invoices = creditCardInvoiceService.retrieveInvoicesByCreditCardAndMonth(id, month);
+		return ResponseEntity.ok(creditCardInvoiceConverter.toResponse(invoices));
 	}
 }

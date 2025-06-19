@@ -22,6 +22,7 @@ public interface CustomerConverter {
 
 	CustomerRegistration toEntity(CustomerRegistrationRequest registrationRequest);
 
+	@Mapping(source = "id", target = "registrationId")
 	CustomerRegistrationResponse toResponse(CustomerRegistration customerRegistration);
 
 	@Mapping(source = "id", target = "customerId")

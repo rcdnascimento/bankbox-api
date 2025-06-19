@@ -4,12 +4,11 @@ spring:
     main:
         allow-bean-definition-overriding: true
     datasource:
-        url: jdbc:mysql://${DB_HOST:localhost}:3307/bankbox?autoReconnect=true&useSSL=false
+        url: jdbc:mysql://${DB_HOST:localhost}:3307/bankbox?createDatabaseIfNotExist=true&serverTimezone=UTC
         username: ${DB_USERNAME:bankbox}
         password: ${DB_PASSWORD:bankbox}
-        driver-class-name: com.mysql.cj.jdbc.Driver
+
     jpa:
         hibernate:
             ddl-auto: update
-            dialect: org.hibernate.dialect.MySQL5Dialect
-        database-platform: org.hibernate.dialect.MySQL5Dialect
+        database-platform: org.hibernate.dialect.MySQL8Dialect

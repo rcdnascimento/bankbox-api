@@ -29,7 +29,7 @@ public class CreditCardTransaction {
 	private List<CreditCardInstallment> installments;
 
 	@ManyToOne
-	@JoinColumn(name = "invoice_id", nullable = false)
+	@JoinColumn(name = "invoice_id")
 	private CreditCardInvoice invoice;
 
 	@ManyToOne

@@ -33,6 +33,11 @@ public class TransactionService implements ExecuteTransaction, RetrieveTransacti
 	}
 
 	@Override
+	public Transaction saveTransaction(Transaction transaction) {
+		return transactionRepository.save(transaction);
+	}
+
+	@Override
 	public List<Transaction> retrieveByCustomer(Long id) {
 		if (!retrieveCustomer.existsById(id)) {
 			throw new CustomerNotFoundException();
