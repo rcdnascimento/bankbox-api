@@ -37,9 +37,9 @@ public class CustomerResource {
 	private final CustomerService customerService;
 
 	@GetMapping
-	public ResponseEntity<List<CustomerDTO>> retrieveAll() {
+	public ResponseEntity<List<CustomerFullResponse>> retrieveAll() {
 		List<Customer> customers = retrieveCustomer.retrieveAll();
-		return ResponseEntity.ok(customerConverter.toDTO(customers));
+		return ResponseEntity.ok(customerConverter.toFullResponse(customers));
 	}
 
 	@PostMapping
@@ -50,15 +50,15 @@ public class CustomerResource {
 	}
 
 	@PostMapping("/registrationId/confirm")
-	public ResponseEntity<CustomerDTO> confirmRegistration(@PathVariable Long registrationId, @RequestBody ConfirmRegistrationRequest request) {
+	public ResponseEntity<CustomerFullResponse> confirmRegistration(@PathVariable Long registrationId, @RequestBody ConfirmRegistrationRequest request) {
 		Customer createdCustomer = customerService.confirmRegistration(registrationId, request.code);
-		return ResponseEntity.ok(customerConverter.toDTO(createdCustomer));
+		return ResponseEntity.ok(customerConverter.toFullResponse(createdCustomer));
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<CustomerDTO> retrieveCustomer(@PathVariable Long id) {
+	public ResponseEntity<CustomerFullResponse> retrieveCustomer(@PathVariable Long id) {
 		Customer customerFound = retrieveCustomer.retrieveById(id);
-		return ResponseEntity.ok(customerConverter.toDTO(customerFound));
+		return ResponseEntity.ok(customerConverter.toFullResponse(customerFound));
 	}
 
 	@GetMapping("/{cpf}/basic")

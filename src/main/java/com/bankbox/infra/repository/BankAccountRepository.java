@@ -12,13 +12,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BankAccountRepository extends JpaRepository<BankAccount, Long> {
+
 	@Query(value = "SELECT * FROM bank_account WHERE owner_id = ?1", nativeQuery = true)
 	List<BankAccount> findByOwnerId(Long id);
-	@Query(value = "SELECT * FROM bank_account WHERE pix_key = ?1", nativeQuery = true)
+
+	@Query(value = "SELECT * FROM bank_account ba INNER JOIN pix_key pk ON ba.id = pk.bank_account_id WHERE pk.key = ?1", nativeQuery = true)
 	Optional<BankAccount> findByPixKey(String pixKey);
+
 	@Query(value = "SELECT * FROM bank_account WHERE bank_name = ?1 AND agency = ?2 AND account = ?3", nativeQuery = true)
 	Optional<BankAccount> findByBankNameAndAgencyAndAccount(BankName bankName, String agency, String account);
-	@Query(value = "SELECT * FROM bank_account WHERE id = LAST_INSERT_ID()", nativeQuery = true)
+
+	@Query(value = "SELECT id FROM bank_account WHERE id = LAST_INSERT_ID()", nativeQuery = true)
 	BankAccount retrieveLastCreated();
 
 	@Modifying

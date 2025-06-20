@@ -36,7 +36,8 @@ public class CreditCardTransactionService implements RetrieveCreditCardTransacti
 
   @Override
   public CreditCardTransaction createTransaction(CreditCardTransactionRequest request) {
-    CreditCard creditCard = creditCardService.retrieveById(request.creditCardId);
+//    CreditCard creditCard = creditCardService.retrieveById(request.creditCardId);
+    CreditCard creditCard = new CreditCard(request.creditCardId);
 
     YearMonth month = YearMonth.from(request.processedAt);
 

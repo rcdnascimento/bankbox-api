@@ -12,10 +12,19 @@ import java.util.Optional;
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 	@Query(value = "SELECT * FROM customer WHERE cpf = ?1", nativeQuery = true)
 	Optional<Customer> findCustomerByCpf(String cpf);
+
 	@Query(value = "SELECT * FROM customer WHERE id = ?1", nativeQuery = true)
 	Optional<Customer> findCustomerById(Long id);
+
+	@Query(value = "SELECT c FROM Customer c LEFT JOIN FETCH c.creditCards")
+	Optional<Customer> findCustomerByIdJoinFetch(Long id);
+
 	@Query(value = "SELECT * FROM customer", nativeQuery = true)
 	List<Customer> findAllCustomers();
+
+	@Query(value = "SELECT * FROM customer limit ?1 offset ?2", nativeQuery = true)
+	List<Customer> findCustomerPaginated(int limit, int offset);
+
 	@Query(value = "SELECT * FROM customer WHERE id = LAST_INSERT_ID()", nativeQuery = true)
 	Customer retrieveLastCreated();
 

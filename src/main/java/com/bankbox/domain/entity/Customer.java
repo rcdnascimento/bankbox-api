@@ -28,13 +28,13 @@ public class Customer {
 	@Setter(AccessLevel.NONE)
 	private String password;
 
-	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<BankAccount> bankAccounts = new ArrayList<>();
 
-	@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
 	private List<CreditCard> creditCards = new ArrayList<>();
 
-	@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<UnifiedCreditCard> unifiedCreditCards = new ArrayList<>();
 
 	public BigDecimal getBalance() {

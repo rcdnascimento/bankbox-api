@@ -6,7 +6,6 @@ import com.bankbox.domain.service.creditcardtransaction.impl.CreditCardTransacti
 import com.bankbox.domain.service.customer.impl.CustomerService;
 import com.bankbox.domain.service.transaction.v1.TransactionService;
 import com.bankbox.infra.dto.CreditCardTransactionRequest;
-import com.bankbox.infra.repository.CreditCardTransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -15,16 +14,17 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 public class RandomService {
 
   private final CustomerService customerService;
+  private final CreditCardTransactionService creditCardTransactionService;
+  private final CreditCardService creditCardService;
+  private final TransactionService transactionService;
+
   private final List<String> firstNames = new ArrayList<>();
   private final List<String> surnames = new ArrayList<>();
   private final List<String> merchantNames = new ArrayList<>();
@@ -32,9 +32,6 @@ public class RandomService {
   private static final String NAMES_FILE_PATH = "/Users/mbp16/Documents/Projects/bankbox-api/src/main/resources/names.txt";
   private static final String SURNAMES_FILE_PATH = "/Users/mbp16/Documents/Projects/bankbox-api/src/main/resources/surnames.txt";
   private static final String MERCHANT_NAMES_FILE_PATH = "/Users/mbp16/Documents/Projects/bankbox-api/src/main/resources/merchantnames.txt";
-  private final CreditCardTransactionService creditCardTransactionService;
-  private final CreditCardService creditCardService;
-  private final TransactionService transactionService;
 
   public RandomService(CustomerService customerService, CreditCardTransactionService creditCardTransactionService, CreditCardService creditCardService, TransactionService transactionService) {
     this.customerService = customerService;
@@ -47,7 +44,9 @@ public class RandomService {
   }
 
   public RandomSummary generateRandomCustomers(RandomConfiguration configuration) {
+    Long lastCustomerId = customerService.retrieveLastCustomerId();
     Integer generatedCustomers = 0;
+
     for (String name : firstNames) {
       if (generatedCustomers >= configuration.getMaximum()) {
         break;
@@ -57,7 +56,7 @@ public class RandomService {
       generatedCustomers += generatedWithSameFirstName;
     }
 
-    addTransactionsBetweenUsers();
+    addTransactionsBetweenUsers(Objects.nonNull(lastCustomerId) ? lastCustomerId : 0L);
 
     return new RandomSummary(generatedCustomers);
   }
@@ -92,8 +91,9 @@ public class RandomService {
         customer.setPassword(new RandomCode(RandomCodeType.ALPHANUMERIC, 6).getCode());
 
         Customer createdCustomer = customerService.createCustomer(customer);
+        List<CreditCard> creditCards = creditCardService.retrieveByCustomerId(createdCustomer.getId());
 
-        addRandomCreditCardTransactions(createdCustomer);
+        addRandomCreditCardTransactions(createdCustomer, creditCards);
       });
       generatedCustomers++;
     }
@@ -108,37 +108,28 @@ public class RandomService {
 
     long endTime = System.currentTimeMillis();
 
-//    System.out.println("Generated " + generatedCustomers + " customers with first name: " + firstName);
     System.out.println("Generated " + generatedCustomers + " customers with first name: " + firstName + " in " + (endTime - startTime) + " ms");
 
     return generatedCustomers;
   }
 
-  private void logTime(Function<Object, Object> function, String message) {
-    long startTime = System.currentTimeMillis();
-    function.apply(null);
-    long endTime = System.currentTimeMillis();
-    System.out.println(message + " took " + (endTime - startTime) + " ms");
-  }
+  private void addRandomCreditCardTransactions(Customer customer, List<CreditCard> creditCards) {
+    creditCards.stream().forEach((creditCard) -> {
+      Stream.of(1, 1, 1, 1, 1).parallel().forEach(installments -> {
+        String merchantName = merchantNames.get(new Random().nextInt(merchantNames.size()));
+        BigDecimal value = BigDecimal.valueOf(new Random().nextDouble() * 1000).setScale(2, BigDecimal.ROUND_HALF_UP);
+        LocalDateTime processedAt = LocalDateTime.now().minusDays(new Random().nextInt(30)).minusMonths(new Random().nextInt(24));
 
-  private void addRandomCreditCardTransactions(Customer customer) {
-    customer.getCreditCards().stream().forEach((creditCard) -> {
-      Stream.of(1, 1, 1, 1, 1).parallel()
-        .forEach(installments -> {
-          String merchantName = merchantNames.get(new Random().nextInt(merchantNames.size()));
-          BigDecimal value = BigDecimal.valueOf(new Random().nextDouble() * 1000).setScale(2, BigDecimal.ROUND_HALF_UP);
-          LocalDateTime processedAt = LocalDateTime.now().minusDays(new Random().nextInt(30)).minusMonths(new Random().nextInt(24));
+        CreditCardTransactionRequest transactionRequest = new CreditCardTransactionRequest();
+        transactionRequest.creditCardId = creditCard.getId();
+        transactionRequest.merchantName = merchantName;
+        transactionRequest.category = CategoryEnum.values()[new Random().nextInt(CategoryEnum.values().length)];
+        transactionRequest.installments = new Random().nextInt(5) + 1;
+        transactionRequest.value = value;
+        transactionRequest.processedAt = processedAt;
 
-          CreditCardTransactionRequest transactionRequest = new CreditCardTransactionRequest();
-          transactionRequest.creditCardId = creditCard.getId();
-          transactionRequest.merchantName = merchantName;
-          transactionRequest.category = CategoryEnum.values()[new Random().nextInt(CategoryEnum.values().length)];
-          transactionRequest.installments = new Random().nextInt(5) + 1;
-          transactionRequest.value = value;
-          transactionRequest.processedAt = processedAt;
-
-          creditCardTransactionService.createTransaction(transactionRequest);
-        });
+        creditCardTransactionService.createTransaction(transactionRequest);
+      });
     });
 
     if (!customer.getCreditCards().isEmpty()) {
@@ -146,26 +137,41 @@ public class RandomService {
     }
   }
 
-  private void addTransactionsBetweenUsers() {
-    Long customers = customerService.countCustomers();
+  private void addTransactionsBetweenUsers(Long fromCustomerId) {
+    Long customersSize = customerService.countCustomers() > 0 ? customerService.countCustomers() : 1L;
 
     Random random = new Random();
 
-    Long sourceBankAccountId = random.nextInt(customers.intValue()) + 1L;
-    Long targetBankAccountId = random.nextInt(customers.intValue()) + 1L;
+    Long sourceBankAccountId = random.nextInt(customersSize.intValue()-fromCustomerId.intValue()) + 1L;
+    Long targetBankAccountId = random.nextInt(customersSize.intValue()-fromCustomerId.intValue()) + 1L;
 
     Long numberOfTransactionsForUser = 5L;
 
-    for (int i = 0; i < numberOfTransactionsForUser; i++) {
-      Transaction transaction = new Transaction();
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-      transaction.setValue(BigDecimal.valueOf((random.nextInt(1000) + 1) * 5).setScale(2, BigDecimal.ROUND_HALF_UP));
-      transaction.setBeneficiary(new BankAccount(sourceBankAccountId));
-      transaction.setSource(new BankAccount(targetBankAccountId));
-      transaction.setType(TransactionType.PIX);
-      transaction.setPerformedAt(LocalDateTime.now().minusDays(random.nextInt(30)).minusMonths(random.nextInt(24)));
+    executor.submit(() -> {
+      for (long i = fromCustomerId; i < customersSize; i++) {
+        for (int j = 0; j < numberOfTransactionsForUser; j++) {
+          Transaction transaction = new Transaction();
 
-      transactionService.saveTransaction(transaction);
+          transaction.setValue(BigDecimal.valueOf((random.nextInt(1000) + 1) * 5).setScale(2, BigDecimal.ROUND_HALF_UP));
+          transaction.setBeneficiary(new BankAccount(sourceBankAccountId));
+          transaction.setSource(new BankAccount(targetBankAccountId));
+          transaction.setType(TransactionType.PIX);
+          transaction.setPerformedAt(LocalDateTime.now().minusDays(random.nextInt(30)).minusMonths(random.nextInt(24)));
+
+          transactionService.saveTransaction(transaction);
+        }
+      }
+    });
+
+    executor.shutdown();
+
+    try {
+      executor.awaitTermination(1, TimeUnit.HOURS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      System.out.println("Error while waiting for tasks to finish: " + e.getMessage());
     }
   }
 

@@ -23,7 +23,7 @@ public class CreditCard {
 	private String ownerName;
 
 	@NotNull
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Customer customer;
 
 	@NotNull
@@ -46,7 +46,7 @@ public class CreditCard {
 	@Column(name = "`limit`")
 	public BigDecimal limit;
 
-	@OneToMany(mappedBy = "creditCard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "creditCard", orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<CreditCardInvoice> invoices = new ArrayList<>();
 
 	@OneToMany(mappedBy = "creditCard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -54,6 +54,10 @@ public class CreditCard {
 
 	private static final int SECURITY_NUMBER_LENGTH = 3;
 	private static final int CREDIT_CARD_LENGTH = 16;
+
+	public CreditCard(Long id) {
+		this.id = id;
+	}
 
 	public void setNumber(String number) {
 		String formattedNumber = number.replace(" ", "");

@@ -15,8 +15,12 @@ public interface CustomerConverter {
 	CustomerBasicDTO toBasic(Customer customer);
 
 	@Mapping(expression = "java(customer.getFirstName())", target = "firstName")
-	CustomerDTO toDTO(Customer customer);
-	List<CustomerDTO> toDTO(List<Customer> customers);
+	CustomerFullResponse toFullResponse(Customer customer);
+	List<CustomerFullResponse> toFullResponse(List<Customer> customers);
+
+	@Mapping(expression = "java(customer.getFirstName())", target = "firstName")
+	CustomerBasicResponse toBasicResponse(Customer customer);
+	List<CustomerBasicResponse> toBasicResponse(List<Customer> customers);
 
 	Customer toCustomer(CustomerRegistrationRequest customerRegistrationRequest);
 

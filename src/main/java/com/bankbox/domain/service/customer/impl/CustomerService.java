@@ -12,6 +12,9 @@ import com.bankbox.domain.service.customer.CreateCustomer;
 import com.bankbox.domain.service.customer.RetrieveCustomer;
 import com.bankbox.infra.repository.PixKeyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,8 +49,22 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 	}
 
 	@Override
+	public Long retrieveLastCustomerId() {
+		return customerRepository.count();
+	}
+
+	@Override
+	public Page<Customer> retrievePaginated(int page, int size) {
+		int offset = (page-1) * size;
+		List<Customer> customers = customerRepository.findCustomerPaginated(size, offset);
+		return new PageImpl<>(customers, PageRequest.of(page, size), customerRepository.count());
+	}
+
+	@Override
 	public Customer retrieveById(Long id) {
 		return customerRepository.findCustomerById(id).orElseThrow(CustomerNotFoundException::new);
+//		return customerRepository.findCustomerByIdJoinFetch(id)
+//			.orElseThrow(CustomerNotFoundException::new);
 	}
 
 	@Override
@@ -108,13 +125,12 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 		for (BankAccount bankAccount : generatedCustomer.getBankAccounts()) {
 			bankAccount.setOwner(createdCustomer);
 			bankAccount.setPixKeys(List.of());
-
-			createdBankAccount = bankAccountService.addBankAccount(bankAccount);
+			bankAccountService.addBankAccount(bankAccount);
 		}
 
 		for (CreditCard creditCard : generatedCustomer.getCreditCards()) {
 			creditCard.setCustomer(createdCustomer);
-			createdCustomer.addCreditCard(creditCardService.addCreditCard(creditCard));
+			creditCardService.addCreditCard(creditCard);
 		}
 
 		pixKeyRepository.save(new PixKey(customer.getCpf(), PixTypeEnum.CPF, createdBankAccount));
