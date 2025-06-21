@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/customers")
@@ -64,7 +66,7 @@ public class CustomerResource {
 	@GetMapping("/{cpf}/basic")
 	public ResponseEntity<CustomerBasicDTO> retrieveCustomerBasic(@PathVariable String cpf) {
 		Customer customerFound = retrieveCustomer.retrieveByCpf(cpf);
-		return ResponseEntity.ok(customerConverter.toBasic(customerFound));
+		return ResponseEntity.ok(customerConverter.toBasicDTO(customerFound));
 	}
 
 	@GetMapping("/{id}/balance")

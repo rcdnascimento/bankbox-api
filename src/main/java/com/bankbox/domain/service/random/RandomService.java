@@ -132,7 +132,7 @@ public class RandomService {
       });
     });
 
-    if (!customer.getCreditCards().isEmpty()) {
+    if (!creditCards.isEmpty()) {
       creditCardService.generateUnifiedCardForCustumer(customer.getId());
     }
   }

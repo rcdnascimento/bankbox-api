@@ -10,6 +10,7 @@ import com.bankbox.infra.repository.CustomerRepository;
 import com.bankbox.infra.repository.UnifiedCreditCardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -50,6 +51,7 @@ public class CreditCardService implements RetrieveCreditCard, PersistCreditCard 
 	}
 
 	@Override
+	@Transactional
 	public UnifiedCreditCard generateUnifiedCardForCustumer(Long customerId) {
 		Customer customer = customerRepository.findCustomerById(customerId).orElseThrow(CustomerNotFoundException::new);
 		Optional<UnifiedCreditCard> currentUnifiedCard = unifiedCreditCardRepository.findByCustomerId(customerId);

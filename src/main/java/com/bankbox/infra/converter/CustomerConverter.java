@@ -12,7 +12,7 @@ import java.util.List;
 @Mapper(componentModel = "spring", imports = BankAccountType.class)
 public interface CustomerConverter {
 	@Mapping(expression = "java(customer.getFirstName())", target = "firstName")
-	CustomerBasicDTO toBasic(Customer customer);
+	CustomerBasicDTO toBasicDTO(Customer customer);
 
 	@Mapping(expression = "java(customer.getFirstName())", target = "firstName")
 	CustomerFullResponse toFullResponse(Customer customer);
