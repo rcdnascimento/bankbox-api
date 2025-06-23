@@ -21,7 +21,7 @@ public class RandomDataResource {
   }
 
   @PostMapping("/customers")
-	public ResponseEntity<RandomSummaryResponse> generateRandomCustomers(
+	public ResponseEntity<Void> generateRandomCustomers(
 		@Valid @RequestBody RandomConfigurationRequest configurationRequest
 	) {
 		RandomConfiguration configuration = RandomConfiguration.builder()
@@ -30,6 +30,6 @@ public class RandomDataResource {
 			.build();
 
 		RandomSummary summary = randomService.generateRandomCustomers(configuration);
-		return ResponseEntity.ok(new RandomSummaryResponse(summary.getTotalGenerated()));
+		return ResponseEntity.ok().body(null);
 	}
 }

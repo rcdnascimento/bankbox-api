@@ -4,6 +4,7 @@ import com.bankbox.domain.entity.CreditCard;
 import com.bankbox.domain.entity.UnifiedCreditCard;
 import com.bankbox.infra.dto.CreditCardRequest;
 import com.bankbox.infra.dto.CreditCardResponse;
+import com.bankbox.infra.dto.UnifiedCreditCardResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -24,5 +25,5 @@ public interface CreditCardConverter {
 	@Mapping(source = "customerId", target = "customer.id")
 	CreditCard toEntity(CreditCardRequest creditCard, Long customerId);
 
-	CreditCardResponse toResponse(UnifiedCreditCard unifiedCreditCard);
+	UnifiedCreditCardResponse toResponse(UnifiedCreditCard unifiedCreditCard);
 }

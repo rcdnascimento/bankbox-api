@@ -82,15 +82,10 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 	}
 
 	public CustomerRegistration registerCustomer(CustomerRegistration customerRegistration) {
-		validatePassword(customerRegistration);
-
 		customerRegistration.setCode(new RandomCode(RandomCodeType.ALPHANUMERIC, 4).toString());
+		customerRegistration.setPassword(new BCryptPasswordEncoder().encode(customerRegistration.getPassword()));
 
 		return customerRegistrationRepository.save(customerRegistration);
-	}
-
-	private void validatePassword(CustomerRegistration registration) {
-
 	}
 
 	@Override
@@ -105,7 +100,11 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 			.password(new BCryptPasswordEncoder().encode(registrationFound.getPassword()))
 			.build();
 
-		return createCustomer(customer);
+		Customer createdCustomer = createCustomer(customer);
+
+		customerRegistrationRepository.deleteById(registrationId);
+
+		return createdCustomer;
 	}
 
 	@Override
@@ -125,7 +124,7 @@ public class CustomerService implements RetrieveCustomer, CreateCustomer {
 		for (BankAccount bankAccount : generatedCustomer.getBankAccounts()) {
 			bankAccount.setOwner(createdCustomer);
 			bankAccount.setPixKeys(List.of());
-			bankAccountService.addBankAccount(bankAccount);
+			createdBankAccount = bankAccountService.addBankAccount(bankAccount);
 		}
 
 		for (CreditCard creditCard : generatedCustomer.getCreditCards()) {

@@ -1,11 +1,7 @@
 package com.bankbox.infra.resource;
 
 import com.bankbox.domain.entity.Error;
-import com.bankbox.domain.exception.BalanceNotEnoughException;
-import com.bankbox.domain.exception.BankAccountNotFoundException;
-import com.bankbox.domain.exception.CustomerAlreadyExistsException;
-import com.bankbox.domain.exception.CustomerAlreadyHasBankException;
-import com.bankbox.domain.exception.CustomerNotFoundException;
+import com.bankbox.domain.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -63,6 +59,12 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(IllegalArgumentException.class)
 	public Error illegalArgumentoException(IllegalArgumentException exception) {
 		return new Error(HttpStatus.BAD_REQUEST, exception.getMessage(), "ILLEGAL_ARGUMENT");
+	}
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(BusinessException.class)
+	public Error runtimeException(BusinessException exception) {
+		return new Error(HttpStatus.BAD_REQUEST, exception.getMessage(), exception.getCode());
 	}
 
 	@ResponseStatus(HttpStatus.NOT_FOUND)

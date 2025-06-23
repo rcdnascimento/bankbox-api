@@ -6,6 +6,7 @@ import com.bankbox.domain.service.creditcardtransaction.impl.CreditCardTransacti
 import com.bankbox.domain.service.customer.impl.CustomerService;
 import com.bankbox.domain.service.transaction.v1.TransactionService;
 import com.bankbox.infra.dto.CreditCardTransactionRequest;
+import com.bankbox.infra.repository.PixKeyRepository;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -24,6 +25,7 @@ public class RandomService {
   private final CreditCardTransactionService creditCardTransactionService;
   private final CreditCardService creditCardService;
   private final TransactionService transactionService;
+  private final PixKeyRepository pixKeyRepository;
 
   private final List<String> firstNames = new ArrayList<>();
   private final List<String> surnames = new ArrayList<>();
@@ -33,7 +35,13 @@ public class RandomService {
   private static final String SURNAMES_FILE_PATH = "/Users/mbp16/Documents/Projects/bankbox-api/src/main/resources/surnames.txt";
   private static final String MERCHANT_NAMES_FILE_PATH = "/Users/mbp16/Documents/Projects/bankbox-api/src/main/resources/merchantnames.txt";
 
-  public RandomService(CustomerService customerService, CreditCardTransactionService creditCardTransactionService, CreditCardService creditCardService, TransactionService transactionService) {
+  public RandomService(
+    CustomerService customerService,
+    CreditCardTransactionService creditCardTransactionService,
+    CreditCardService creditCardService,
+    TransactionService transactionService,
+    PixKeyRepository pixKeyRepository
+  ) {
     this.customerService = customerService;
     this.firstNames.addAll(extractNamesFromFile(NAMES_FILE_PATH));
     this.surnames.addAll(extractSurnamesFromFile(SURNAMES_FILE_PATH));
@@ -41,24 +49,62 @@ public class RandomService {
     this.creditCardTransactionService = creditCardTransactionService;
     this.creditCardService = creditCardService;
     this.transactionService = transactionService;
+    this.pixKeyRepository = pixKeyRepository;
   }
 
+//  public RandomSummary generateRandomCustomers(RandomConfiguration configuration) {
+//    Long lastCustomerId = customerService.retrieveLastCustomerId();
+//    Integer generatedCustomers = 0;
+//
+//    for (String name : firstNames) {
+//      if (generatedCustomers >= configuration.getMaximum()) {
+//        break;
+//      }
+//
+//      Integer generatedWithSameFirstName = generateRandomCustomerWithFirstName(configuration, generatedCustomers, name);
+//      generatedCustomers += generatedWithSameFirstName;
+//    }
+//
+//    addTransactionsBetweenUsers(Objects.nonNull(lastCustomerId) ? lastCustomerId : 0L);
+//
+//    return new RandomSummary(generatedCustomers);
+//  }
+
   public RandomSummary generateRandomCustomers(RandomConfiguration configuration) {
-    Long lastCustomerId = customerService.retrieveLastCustomerId();
-    Integer generatedCustomers = 0;
+    List<Customer> customers = customerService.retrieveAll();
+    List<PixKey> allPixKeys = pixKeyRepository.findAll();
+    Map<String, PixKey> pixKeyByCPF = new HashMap<>();
 
-    for (String name : firstNames) {
-      if (generatedCustomers >= configuration.getMaximum()) {
-        break;
-      }
-
-      Integer generatedWithSameFirstName = generateRandomCustomerWithFirstName(configuration, generatedCustomers, name);
-      generatedCustomers += generatedWithSameFirstName;
+    for (PixKey pixKey : allPixKeys) {
+      pixKeyByCPF.put(pixKey.getKey(), pixKey);
     }
 
-    addTransactionsBetweenUsers(Objects.nonNull(lastCustomerId) ? lastCustomerId : 0L);
+    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-    return new RandomSummary(generatedCustomers);
+    for (Customer customer : customers) {
+      executor.submit(() -> {
+        PixKey pixKeyFound = pixKeyByCPF.get(customer.getCpf());
+        if (Objects.isNull(pixKeyFound) || Objects.nonNull(pixKeyFound.getBankAccount()) || customer.getBankAccounts().isEmpty()) {
+          return;
+        }
+
+        BankAccount bankAccount = customer.getBankAccounts().get(0);
+        pixKeyFound.setBankAccount(bankAccount);
+
+        pixKeyRepository.save(pixKeyFound);
+      });
+    }
+
+    executor.shutdown();
+
+    try {
+      executor.awaitTermination(1, TimeUnit.HOURS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      System.out.println("Error while waiting for tasks to finish: " + e.getMessage());
+    }
+
+    return null;
   }
 
   public Integer generateRandomCustomerWithFirstName(

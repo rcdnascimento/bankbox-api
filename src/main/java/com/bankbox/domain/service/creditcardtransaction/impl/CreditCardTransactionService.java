@@ -11,6 +11,7 @@ import com.bankbox.infra.repository.CreditCardTransactionRepository;
 import com.bankbox.infra.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -35,9 +36,9 @@ public class CreditCardTransactionService implements RetrieveCreditCardTransacti
   }
 
   @Override
+  @Transactional
   public CreditCardTransaction createTransaction(CreditCardTransactionRequest request) {
-//    CreditCard creditCard = creditCardService.retrieveById(request.creditCardId);
-    CreditCard creditCard = new CreditCard(request.creditCardId);
+    CreditCard creditCard = creditCardService.retrieveById(request.creditCardId);
 
     YearMonth month = YearMonth.from(request.processedAt);
 

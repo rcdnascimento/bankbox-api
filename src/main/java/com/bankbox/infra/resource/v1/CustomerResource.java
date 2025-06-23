@@ -51,7 +51,7 @@ public class CustomerResource {
 		return ResponseEntity.ok(customerConverter.toResponse(customerCreated));
 	}
 
-	@PostMapping("/registrationId/confirm")
+	@PostMapping("/{registrationId}/confirm")
 	public ResponseEntity<CustomerFullResponse> confirmRegistration(@PathVariable Long registrationId, @RequestBody ConfirmRegistrationRequest request) {
 		Customer createdCustomer = customerService.confirmRegistration(registrationId, request.code);
 		return ResponseEntity.ok(customerConverter.toFullResponse(createdCustomer));

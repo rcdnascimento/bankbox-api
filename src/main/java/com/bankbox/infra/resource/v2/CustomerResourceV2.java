@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -27,9 +28,16 @@ public class CustomerResourceV2 {
 	private final CreditCardConverter creditCardConverter;
 	private final CustomerService customerService;
 
+	private List<Customer> customersCache = new ArrayList<>();
+
 	@GetMapping
 	public ResponseEntity<List<CustomerBasicResponse>> retrieveAll() {
-		List<Customer> customers = retrieveCustomer.retrieveAll();
-		return ResponseEntity.ok(customerConverter.toBasicResponse(customers));
+		if (customersCache.isEmpty()) {
+			List<Customer> customers = retrieveCustomer.retrieveAll();
+			customersCache = customers;
+			return ResponseEntity.ok(customerConverter.toBasicResponse(customers));
+		}
+
+		return ResponseEntity.ok(customerConverter.toBasicResponse(customersCache));
 	}
 }

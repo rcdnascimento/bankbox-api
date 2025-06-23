@@ -23,7 +23,7 @@ public class CreditCardInvoiceImpl implements CreditCardInvoiceService {
 
   @Override
   public Optional<CreditCardInvoice> findByCreditCardAndMonth(Long creditCardId, YearMonth month) {
-    return creditCardInvoiceRepository.findByMonth(month);
+    return creditCardInvoiceRepository.findByCreditCardIdAndMonth(creditCardId, month);
   }
 
   @Override

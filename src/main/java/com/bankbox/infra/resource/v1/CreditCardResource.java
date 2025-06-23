@@ -10,12 +10,9 @@ import com.bankbox.infra.converter.CreditCardConverter;
 import com.bankbox.domain.entity.CreditCard;
 import com.bankbox.infra.converter.CreditCardInvoiceConverter;
 import com.bankbox.infra.converter.CreditCardTransactionConverter;
-import com.bankbox.infra.dto.CreditCardInvoiceResponse;
-import com.bankbox.infra.dto.CreditCardResponse;
+import com.bankbox.infra.dto.*;
 import com.bankbox.domain.service.creditcard.PersistCreditCard;
 import com.bankbox.domain.service.creditcard.RetrieveCreditCard;
-import com.bankbox.infra.dto.CreditCardTransactionRequest;
-import com.bankbox.infra.dto.CreditCardTransactionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +46,7 @@ public class CreditCardResource {
 	}
 
 	@PostMapping("/unified")
-	public ResponseEntity<CreditCardResponse> generateUnifiedCard(@RequestParam(value = "customer_id", required = true) Long customerId) {
+	public ResponseEntity<UnifiedCreditCardResponse> generateUnifiedCard(@RequestParam(value = "customer_id", required = true) Long customerId) {
 		UnifiedCreditCard unifiedCreditCard = persistCreditCard.generateUnifiedCardForCustumer(customerId);
 		return ResponseEntity.ok(creditCardConverter.toResponse(unifiedCreditCard));
 	}
